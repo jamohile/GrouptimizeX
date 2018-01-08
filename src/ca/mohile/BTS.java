@@ -23,15 +23,16 @@ class BTS<T> {
 
 
     private int seek(ArrayList<T> items, int target) {
-        int halfway = ((int) Math.nextUp(items.size() / 2)) - 1;
+        int halfway = ((int) Math.round((double)items.size() / 2)) - 1;
         int eval_halfway = this.btsEval.evaluate(items.get(halfway));
 
         if (items.size() == 1 || eval_halfway == target) {
             return halfway;
         } else if (eval_halfway > target) {
-            return seek((ArrayList) items.subList(0, halfway), target);
+            return seek(new ArrayList<T>(items.subList(0, halfway)), target);
         } else {
-            return seek((ArrayList) items.subList(halfway, items.size() - 1), target);
+
+            return seek(new ArrayList<T>(items.subList(halfway, items.size() - 1)), target);
         }
 
     }
