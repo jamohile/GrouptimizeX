@@ -13,10 +13,15 @@ public class Main {
 
     public static void main(String[] args) {
 
-       // configureFromJSONFile("sample.json");
+       configureFromJSONFile("sample2.json");
 
-        configureFromCMD();
+       System.out.println(Person.likabilities);
 
+        //configureFromCMD();
+
+        /*
+        Right now...just run every algorithm we have :).
+         */
         TopDownIteration topDownIteration = new TopDownIteration(Person.people);
         topDownIteration.run();
 
@@ -43,6 +48,11 @@ public class Main {
         System.out.println(invertedSwingIteration);
     }
 
+    /*
+    Takes a properly formatted JSON file
+    and builds a network.
+    WARN: NO SYNTAX CHECKING.
+     */
     static void configureFromJSONFile(String fileName) {
         String file = "";
         try {
@@ -75,6 +85,7 @@ public class Main {
                     person.addChoice(choice, value);
                 }
             }
+            Person.calculateLikabilities();
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -85,6 +96,10 @@ public class Main {
         }
 
     }
+    /*
+    Function to read in a state from
+    CMD.
+     */
     static void configureFromCMD(){
         Scanner scanner = new Scanner(System.in);
         System.out.println("How many people?: ");
@@ -116,7 +131,7 @@ public class Main {
                 person.addChoice(choicePerson, numChoices - choice);
             }
         }
-
+        Person.calculateLikabilities();
         System.out.println("Awesome, grouptimize is ready to go.\n\n\n");
 
     }

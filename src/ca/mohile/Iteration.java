@@ -249,7 +249,7 @@ class SwingIteration extends MiddleIteration {
     }
 
     public SwingIteration(ArrayList<Person> people, boolean inverted) {
-        super(people, "Swing Interation");
+        super(people, inverted ? "Inverted Swing Iteration" : "Swing Iteration");
         this.inverted = inverted;
         initialAverage = getAverageLikabilityForGroup(people);
     }
