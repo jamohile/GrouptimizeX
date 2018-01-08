@@ -1,0 +1,72 @@
+{
+  "people": [
+    {
+      "name": "John",
+      "choices" :[
+        {
+          "name" : "Jack",
+          "value" : 3
+        },
+        {
+          "name" : "Joe",
+          "value" : 2
+        },
+        {
+          "name" : "Jim",
+          "value" : 1
+        }
+      ]
+    },
+    {
+      "name": "Jack",
+      "choices": [
+        {
+          "name" : "Joe",
+          "value" : 3
+        },
+        {
+          "name" : "Jim",
+          "value" : 2
+        },
+        {
+          "name" : "John",
+          "value" : 1
+        }
+      ]
+    },
+    {
+      "name": "Joe",
+      "choices": [
+        {
+          "name" : "Jim",
+          "value" : 3
+        },
+        {
+          "name" : "Jack",
+          "value" : 2
+        },
+        {
+          "name" : "John",
+          "value" : 1
+        }
+      ]
+    },
+    {
+      "name": "Jim",
+      "choices": [
+        {
+          "name" : "John",
+          "value" : 3
+        },
+        {
+          "name" : "Jack",
+          "value" : 2
+        },
+        {
+          "name" : "Joe",
+          "value" : 1
+        }
+      ]
+    }
+  ]
+}
