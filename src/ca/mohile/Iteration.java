@@ -1,272 +1,221 @@
 package ca.mohile;
 
-import java.util.*;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
-abstract class Iteration {
-    static ArrayList<Person> people;
-    HashMap<Person, Person> pairs;
-    int satisfaction = 0;
-    int iterations = 0;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 
-    String name="";
+public class Iteration {
+    HashMap<Groupable, Groupable> hierarchy = new HashMap<>();
+    ArrayList<Groupable> people;
+    ArrayList<Groupable> groups;
 
-
-    public Iteration(ArrayList<Person> people, String name) {
-        pairs = new HashMap<>();
-        this.name = name;
-        Iteration.people = people;
+    public Iteration() {
+        people = new ArrayList<>();
     }
 
-    HashMap<Person, Person> run() {
-        int numPeople = people.size();
+    void add(GPerson person) {
+        people.add(person);
+    }
 
-        while (numPeople - pairs.size() >= 1 && iterations < numPeople) {
-            /*
-            Find next person, and make a choice.
-             */
-            choose(getNextPerson());
-            iterations += 1;
+    void optimize(int targetGroups, int maxPerGroup) {
+        if (targetGroups * maxPerGroup < this.people.size()) {
+            System.out.println("Please adjust size parameters, this setup is not possible.");
+        } else {
+            groups = optimize(this.people, targetGroups, maxPerGroup);
+            print();
         }
-        return pairs;
     }
 
-    void setPair(Person a, Person b) {
-        pairs.put(a, b);
-        pairs.put(b, a);
-    }
+    ArrayList<Groupable> optimize(ArrayList<Groupable> set, int targetGroups, int maxPerGroup) {
+        /*
+        Generate a set of popularities in this scope
+         */
+        HashMap<Groupable, Integer> popularities = generatePopularities(set);
+        ArrayList<Groupable> groups = new ArrayList<>();
+        int limit = set.size();
 
-    boolean hasPair(Person p) {
-        return pairs.containsKey(p);
-    }
+        /*
+        Iterator defines order of choice
+         */
+        BottomUpIterator iterator = new BottomUpIterator(popularities);
+        /*
+        If there are too many groups, optimize to combine groups.
+         */
+        while (limit >= 0) {
+            if (getUngrouped(groups, set, popularities).size() == 0) {
+                break;
+            }
+            Groupable g = iterator.getNextPerson(getUngrouped(groups, set, popularities));
+            Group group = choose(g, maxPerGroup);
+            if (group != null) {
+                groups.add(group);
+                for (Groupable child : group.children) {
+                    if (groups.contains(child)) {
+                        groups.remove(child);
+                    }
+                }
+            }
+            limit -= 1;
+        }
+        //If true, this means this optimization yielded no new results.
+        boolean noMoreSolutions = groups.size() == 0;
+        //Add back existing groups
+        for (Groupable group : getUngrouped(groups, set, popularities)) {
+            groups.add(group);
+        }
+        if (groups.size() > targetGroups && !noMoreSolutions) {
+            return optimize(groups, targetGroups, maxPerGroup);
+        } else {
+            return groups;
+        }
 
-    Person getPair(Person p) {
-        return pairs.get(p);
-    }
-
-    void removePair(Person a, Person b) {
-        pairs.remove(a);
-        pairs.remove(b);
     }
 
     /*
-    Returns a likability sorted array of unpaired people from pairs.
-     */
-    protected ArrayList<Person> getUnpaired() {
-        ArrayList<Person> unpaired = new ArrayList<>();
-        for (Person person : people) {
-            if (!hasPair(person)) {
-                unpaired.add(person);
+Takes a properly formatted JSON file
+and builds a network.
+WARN: NO SYNTAX CHECKING.
+ */
+    void configureFromJSONFile(String fileName) {
+        String file = "";
+        try {
+            JSONParser parser = new JSONParser();
+            JSONObject jsonObject = (JSONObject) parser.parse(new FileReader(fileName));
+
+            JSONArray people = (JSONArray) jsonObject.get("people");
+            java.util.Iterator<JSONObject> peopleiterator = people.iterator();
+            /*
+            Set names.
+             */
+            while (peopleiterator.hasNext()) {
+                JSONObject person = peopleiterator.next();
+                add(new GPerson((String) person.get("name")));
             }
+            /*
+            Set choices.
+             */
+            peopleiterator = people.iterator();
+            while (peopleiterator.hasNext()) {
+                JSONObject jsonPerson = peopleiterator.next();
+                GPerson person = GPerson.getPerson((String) jsonPerson.get("name"));
+
+                JSONArray jsonChoices = (JSONArray) jsonPerson.get("choices");
+                java.util.Iterator choiceIterator = jsonChoices.iterator();
+                while (choiceIterator.hasNext()) {
+                    JSONObject jsonChoice = (JSONObject) choiceIterator.next();
+                    GPerson choice = GPerson.getPerson((String) jsonChoice.get("name"));
+                    int value = Math.toIntExact((Long) jsonChoice.get("value"));
+                    person.addChoice(choice, value);
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        Collections.sort(unpaired);
-        return unpaired;
+
     }
 
-    private void choose(Person person) {
-        ArrayList<Person> choices = new ArrayList<>();
-        choices.addAll(person.choices.keySet());
+    void print() {
+        String output = "";
+        for (Groupable g : groups) {
+            output += g.toString() + "\n";
+        }
+        System.out.println(output);
+    }
 
+    ArrayList<Groupable> getUngrouped(ArrayList<Groupable> groups, ArrayList<Groupable> set, HashMap<Groupable, Integer> popularities) {
+        ArrayList<Groupable> ungrouped = new ArrayList<>();
+        for (Groupable g : set) {
+            if (!groups.contains(getHighestParent(g))) {
+                ungrouped.add(g);
+            }
+        }
 
-        choices.sort(new Comparator<Person>() {
+        ungrouped.sort(new Comparator<Groupable>() {
             @Override
-            public int compare(Person o1, Person o2) {
+            public int compare(Groupable o1, Groupable o2) {
                 /*
                 Inverted, so favorable choices come to front.
                  */
-                return person.getStrength(o2) - person.getStrength(o1);
+                return popularities.get(o1) - popularities.get(o2);
+            }
+        });
+        return ungrouped;
+    }
+
+    Group choose(Groupable groupable, int maxPerGroup) {
+        ArrayList<GPerson> choices = new ArrayList<>();
+        choices.addAll(groupable.getChoices().keySet());
+
+        choices.sort(new Comparator<GPerson>() {
+            @Override
+            public int compare(GPerson o1, GPerson o2) {
+                /*
+                Inverted, so favorable choices come to front.
+                 */
+                return groupable.getStrength(o2) - groupable.getStrength(o1);
             }
         });
 
-        for (Person choice : choices) {
-            if (!hasPair(choice)) {
-                setPair(person, choice);
-                satisfaction += person.getMutualStrength(choice);
-                break;
+        for (GPerson choice : choices) {
+            if (getHighestParent(choice).getSize() + groupable.getSize() <= maxPerGroup) {
+                Group group = new Group(groupable, getHighestParent(choice));
+
+                hierarchy.put(groupable, group);
+                hierarchy.put(getHighestParent(choice), group);
+
+                return group;
+                //satisfaction += person.getMutualStrength(choice);
             }
         }
-    }
-    String getMeta(){
-        return name + " (" + satisfaction + ") : \n";
-    }
-    abstract Person getNextPerson();
-
-    @Override
-    public String toString() {
-        ArrayList pairCache = new ArrayList();
-        String object = "Paired: " + pairs.size() + " / " + people.size() + "\n";
-        for (Person person : pairs.keySet()) {
-            Person other = pairs.get(person);
-            if (!pairCache.contains(person.generatePairHash(other))) {
-                String pair = "\t" + person.toString() + " : " + other.toString() + " (" + person.getMutualStrength(other) + ")\n";
-                object += pair;
-                pairCache.add(person.generatePairHash(other));
-            }
-        }
-        ;
-        return object;
-
-    }
-}
-
-/*
-    Different algorithms.
-     */
-class TopDownIteration extends Iteration {
-
-
-    public TopDownIteration(ArrayList<Person> people) {
-        super(people, "Top Down Iteration");
+        return null;
     }
 
-    @Override
-    Person getNextPerson() {
-        ArrayList<Person> people = (this.getUnpaired());
-            /*
-            Top Down, so we are looking for highest possible likability.
-             */
-        return people.get(people.size() - 1);
-    }
-
-    @Override
-    public String toString() {
-        return getMeta() + super.toString();
-    }
-}
-
-class BottomUpIteration extends Iteration {
-    public BottomUpIteration(ArrayList<Person> people) {
-        super(people, "Bottom Up Iteration");
-    }
-
-    @Override
-    Person getNextPerson() {
-        ArrayList<Person> people = this.getUnpaired();
-        return people.get(0);
-    }
-
-    @Override
-    public String toString() {
-        return this.getMeta() + super.toString();
-    }
-}
-
-/*
-Alternates between selecting high and low extreme.
- */
-class EquivocationIteration extends Iteration {
-    /*
-    This algorithm goes back and forth between highest and lowest.
-     */
-    boolean MODE_HIGH = false;
-
-    public EquivocationIteration(ArrayList<Person> people) {
-        this(people, true);
-    }
-
-    public EquivocationIteration(ArrayList<Person> people, boolean startHigh) {
-        super(people, "Equivocation Iteration");
+    HashMap<Groupable, Integer> generatePopularities(ArrayList<Groupable> set) {
         /*
-        Invert MODE_HIGH because algorithm switches it before using it.
+        Return popularities aggregated to the current level of groupable abstraction
          */
-        MODE_HIGH = !startHigh;
+        HashMap<Groupable, Integer> popularities = new HashMap<>();
+        for (Groupable g : set) {
+            popularities.put(g, 0);
+        }
+        for (Groupable groupable : set) {
+            HashMap<GPerson, Integer> choices = groupable.getChoices();
+            for (Groupable choice : choices.keySet()) {
+                Groupable highestParent = getHighestParent(choice);
+                popularities.put(highestParent, popularities.get(highestParent) + choices.get(choice));
+            }
+        }
+        return popularities;
     }
 
-    @Override
-    Person getNextPerson() {
-        ArrayList<Person> people = this.getUnpaired();
-
-        MODE_HIGH = !MODE_HIGH;
-        if (MODE_HIGH) {
-            return people.get(people.size() - 1);
+    Groupable getHighestParent(Groupable g) {
+        if (hasParent(g)) {
+            return getHighestParent(getParent(g));
         } else {
-            return people.get(0);
+            return g;
         }
     }
 
-    @Override
-    public String toString() {
-        return this.name + " (" + satisfaction + ") : \n" + super.toString();
-    }
-}
-
-/*
-Always finds person closest to mean likability.
- */
-class MiddleIteration extends Iteration {
-
-    public MiddleIteration(ArrayList<Person> people) {
-        this(people, "Middle Iteration");
-    }
-    public MiddleIteration(ArrayList<Person> people, String name){super(people, name);}
-    @Override
-    public String toString() {
-        return this.getMeta() + super.toString();
+    /*
+    Returns hierarchical parent if exists, otherwise returns self
+     */
+    Groupable getParent(Groupable g) {
+        return hierarchy.get(g);
     }
 
-    @Override
-    Person getNextPerson() {
-        ArrayList<Person> people = this.getUnpaired();
-        BTS<Person> bts = new BTS<>(people, Person.BTSEvaluator);
-        return bts.seek(getAverageUnpairedLikeability());
-    }
-
-    int getAverageLikability() {
-        return getAverageLikability(Person.likabilities.values());
-    }
-
-    int getAverageLikability(Collection<Integer> likabilities) {
-        int sum = 0;
-        for (int likability : likabilities) {
-            sum += likability;
-        }
-        return sum / likabilities.size();
-    }
-
-    int getAverageLikabilityForGroup(Collection<Person> people) {
-        ArrayList<Integer> likeabilities = new ArrayList<>();
-        for (Person person : getUnpaired()) {
-            likeabilities.add(person.getLikability());
-        }
-        return getAverageLikability(likeabilities);
-    }
-
-    int getAverageUnpairedLikeability() {
-        return getAverageLikabilityForGroup(getUnpaired());
-    }
-}
-
-/*
-Moves with or against the trend.
-If average likability is less than or greater
-than initial average, that is the trend.
- */
-class SwingIteration extends MiddleIteration {
-    int initialAverage;
-    boolean inverted = false;
-
-    public SwingIteration(ArrayList<Person> people) {
-        this(people, false);
-    }
-
-    public SwingIteration(ArrayList<Person> people, boolean inverted) {
-        super(people, inverted ? "Inverted Swing Iteration" : "Swing Iteration");
-        this.inverted = inverted;
-        initialAverage = getAverageLikabilityForGroup(people);
-    }
-
-    @Override
-    Person getNextPerson() {
-        ArrayList<Person> people = this.getUnpaired();
-        int currentLikability = getAverageUnpairedLikeability();
-        if ((currentLikability >= initialAverage && !inverted) || currentLikability <initialAverage && inverted) {
-            return people.get(people.size() - 1);
-        } else {
-            return people.get(0);
-        }
-    }
-
-    @Override
-    public String toString() {
-        return this.getMeta() + super.toString();
+    Boolean hasParent(Groupable g) {
+        return hierarchy.containsKey(g);
     }
 }

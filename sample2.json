@@ -1,0 +1,106 @@
+{
+  "people": [
+    {
+      "name": "Jay",
+      "choices": [
+        {
+          "name": "Clippy",
+          "value": 3
+        },
+        {
+          "name": "Bret",
+          "value": 2
+        },
+        {
+          "name": "Laney",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "Clippy",
+      "choices": [
+        {
+          "name": "Coe",
+          "value": 3
+        },
+        {
+          "name": "Jay",
+          "value": 2
+        },
+        {
+          "name": "Bret",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "Bret",
+      "choices": [
+        {
+          "name": "Laney",
+          "value": 3
+        },
+        {
+          "name": "Jay",
+          "value": 2
+        },
+        {
+          "name": "Clippy",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "Coe",
+      "choices": [
+        {
+          "name": "Clara",
+          "value": 3
+        },
+        {
+          "name": "Jay",
+          "value": 2
+        },
+        {
+          "name": "Clippy",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "Laney",
+      "choices": [
+        {
+          "name": "Bret",
+          "value": 3
+        },
+        {
+          "name": "Clara",
+          "value": 2
+        },
+        {
+          "name": "Jay",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "Clara",
+      "choices": [
+        {
+          "name": "Laney",
+          "value": 3
+        },
+        {
+          "name": "Coe",
+          "value": 2
+        },
+        {
+          "name": "Jay",
+          "value": 1
+        }
+      ]
+    }
+  ]
+}
