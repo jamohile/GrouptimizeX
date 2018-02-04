@@ -92,11 +92,24 @@ class GPerson extends Groupable {
         this.name = name;
         GPerson.NAME_INDEX.put(this.name, this);
     }
+    void changeName(String name){
+        NAME_INDEX.remove(this.name);
+        this.name = name;
+        NAME_INDEX.put(this.name, this);
+    }
+    static boolean hasPerson(String name){return NAME_INDEX.containsKey(name);}
     static GPerson getPerson(String name){
         return NAME_INDEX.get(name);
     }
+    static void removePerson(String name){NAME_INDEX.remove(name);}
     void addChoice(GPerson person, Integer value){
         this.choices.put(person, value);
+    }
+    void removeChoice(GPerson person){
+        this.choices.remove(person);
+    }
+    int getNextChoiceStrength(){
+        return this.choices.size() + 1;
     }
     @Override
     int getSize() {

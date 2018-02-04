@@ -8,33 +8,72 @@ import org.json.simple.parser.ParseException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.*;
 
 public class Iteration {
     HashMap<Groupable, Groupable> hierarchy = new HashMap<>();
-    ArrayList<Groupable> people;
+    ArrayList<GPerson> people;
     ArrayList<Groupable> groups;
+
+    public enum Types {
+        BottomUp,
+        TopDown,
+        Swing,
+        InvSwing,
+        Equivocator,
+        Middle
+    }
 
     public Iteration() {
         people = new ArrayList<>();
+        groups = new ArrayList<>();
+    }
+
+    boolean has(String name) {
+        return GPerson.hasPerson(name);
     }
 
     void add(GPerson person) {
         people.add(person);
     }
 
-    void optimize(int targetGroups, int maxPerGroup) {
-        if (targetGroups * maxPerGroup < this.people.size()) {
-            System.out.println("Please adjust size parameters, this setup is not possible.");
-        } else {
-            groups = optimize(this.people, targetGroups, maxPerGroup);
-            print();
+    /*
+    Add code to handle choice removal later...
+     */
+    void remove(String name) {
+        if (has(name)) {
+            remove(get(name));
         }
     }
 
-    ArrayList<Groupable> optimize(ArrayList<Groupable> set, int targetGroups, int maxPerGroup) {
+    void remove(GPerson person) {
+        for(GPerson p : people){
+            person.removeChoice(person);
+        }
+        GPerson.removePerson(person.name);
+        people.remove(person);
+    }
+
+    GPerson get(String name) {
+        return GPerson.getPerson(name);
+    }
+
+    void optimize(int targetGroups, int maxPerGroup, Types types) {
+        hierarchy.clear();
+        groups.clear();
+
+        if (targetGroups * maxPerGroup < this.people.size()) {
+            System.out.println("Please adjust size parameters, this setup is not possible.");
+        } else {
+            groups = optimize(new ArrayList<Groupable>(people), targetGroups, maxPerGroup, types);
+        }
+    }
+
+    ArrayList<Groupable> getGroups() {
+        return groups;
+    }
+
+    ArrayList<Groupable> optimize(ArrayList<Groupable> set, int targetGroups, int maxPerGroup, Types type) {
         /*
         Generate a set of popularities in this scope
          */
@@ -45,7 +84,31 @@ public class Iteration {
         /*
         Iterator defines order of choice
          */
-        BottomUpIterator iterator = new BottomUpIterator(popularities);
+
+        RankedIterator iterator;
+
+        switch (type) {
+            case BottomUp:
+                iterator = new BottomUpIterator(popularities);
+                break;
+            case TopDown:
+                iterator = new TopDownIterator(popularities);
+                break;
+            case Swing:
+                iterator = new SwingIterator(popularities);
+                break;
+            case Middle:
+                iterator = new MiddleIterator(popularities);
+                break;
+            case InvSwing:
+                iterator = new SwingIterator(popularities, true);
+                break;
+            case Equivocator:
+                iterator = new EquivocationIterator(popularities);
+                break;
+            default:
+                iterator = new BottomUpIterator(popularities);
+        }
         /*
         If there are too many groups, optimize to combine groups.
          */
@@ -53,7 +116,7 @@ public class Iteration {
             if (getUngrouped(groups, set, popularities).size() == 0) {
                 break;
             }
-            Groupable g = iterator.getNextPerson(getUngrouped(groups, set, popularities));
+            Groupable g = iterator.getNext(getUngrouped(groups, set, popularities));
             Group group = choose(g, maxPerGroup);
             if (group != null) {
                 groups.add(group);
@@ -72,7 +135,7 @@ public class Iteration {
             groups.add(group);
         }
         if (groups.size() > targetGroups && !noMoreSolutions) {
-            return optimize(groups, targetGroups, maxPerGroup);
+            return optimize(groups, targetGroups, maxPerGroup, type);
         } else {
             return groups;
         }
@@ -123,6 +186,41 @@ WARN: NO SYNTAX CHECKING.
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+    }
+
+    void configureFromCMD() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("How many people?: ");
+        int numPeople = scanner.nextInt();
+        System.out.println("Okay, ready for " + numPeople + " people.");
+
+        /*
+        Get Names, create people.
+         */
+        for (int x = 1; x <= numPeople; x++) {
+            System.out.println("What is person " + x + "'s name?: ");
+            String name = scanner.next();
+            this.add(new GPerson(name));
+        }
+        /*
+        get number of choices per person
+         */
+        System.out.println("How many choices per person?: ");
+        int numChoices = scanner.nextInt();
+
+        for (GPerson person : people) {
+            for (int choice = 0; choice < numChoices; choice++) {
+                System.out.println("Choice " + (choice + 1) + " for " + person.name + ": ");
+                String choiceName;
+                do {
+                    choiceName = scanner.next();
+                } while (GPerson.getPerson(choiceName) == null || choiceName.equals(person.name));
+                GPerson choicePerson = GPerson.getPerson(choiceName);
+                person.addChoice(choicePerson, numChoices - choice);
+            }
+        }
+        System.out.println("Awesome, grouptimize is ready to go.\n\n\n");
 
     }
 

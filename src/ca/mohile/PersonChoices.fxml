@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXComboBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+
+<?import javafx.scene.layout.VBox?>
+<AnchorPane prefHeight="55.0" prefWidth="384.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ca.mohile.PersonChoices">
+    <VBox>
+    <HBox prefHeight="55.0">
+      <JFXComboBox fx:id="choiceSelector" onAction="#choiceChanged" prefWidth="150.0" promptText="Choice">
+         <HBox.margin>
+            <Insets />
+         </HBox.margin>
+         <padding>
+            <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+         </padding>
+      </JFXComboBox>
+      <JFXComboBox fx:id="strengthSelector" layoutX="88.0" layoutY="10.0" onAction="#strengthChanged" prefWidth="150.0" promptText="Strength">
+         <padding>
+            <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+         </padding>
+      </JFXComboBox>
+    </HBox>
+    <HBox>
+        <Button fx:id="saveButton" disable="true" onAction="#saveChoice" text="Save">
+         <HBox.margin>
+            <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+         </HBox.margin></Button>
+      <Button fx:id="removeButton" layoutX="396.0" layoutY="18.0" onAction="#removeChoice" prefWidth="104.0" text="Remove">
+         <HBox.margin>
+            <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+         </HBox.margin></Button>
+    </HBox>
+    </VBox>
+</AnchorPane>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXListView?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<TabPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="450.0" prefWidth="1400.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ca.mohile.GrouptimizeUIController">
+    <Tab fx:id="setupTab" closable="false" text="Setup">
+        <SplitPane dividerPositions="0.292347377472055">
+            <VBox>
+                <VBox>
+                    <TextField fx:id="nameField" prefHeight="36.0" prefWidth="279.0" promptText="Name">
+                        <VBox.margin>
+                            <Insets bottom="8.0" />
+                        </VBox.margin>
+                    </TextField>
+                    <HBox>
+                        <JFXButton buttonType="RAISED" defaultButton="true" onAction="#addPerson" ripplerFill="#000000b3" text="Add" />
+                        <JFXButton onAction="#savePersonName" text="Save" />
+                        <JFXButton onAction="#removePerson" text="Remove" />
+                    </HBox>
+                </VBox>
+                <JFXListView fx:id="peopleList" onMouseClicked="#loadPerson" prefHeight="200.0" prefWidth="200.0" />
+                <padding>
+                    <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+                </padding>
+            </VBox>
+            <VBox prefHeight="459.0" prefWidth="596.0">
+                <Label text="Choices" />
+                <VBox fx:id="choicesContainer">
+                </VBox>
+                <HBox>
+                    <Button fx:id="addChoiceButton" onAction="#addChoice" text="Add Choice" />
+                </HBox>
+                <opaqueInsets>
+                    <Insets />
+                </opaqueInsets>
+                <padding>
+                    <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+                </padding>
+            </VBox>
+        </SplitPane>
+    </Tab>
+
+    <Tab closable="false" text="Groups">
+        <AnchorPane>
+            <VBox prefHeight="399.0" prefWidth="354.0">
+                <Label text="Number of Groups">
+                    <VBox.margin>
+                        <Insets left="8.0" right="8.0" top="8.0" />
+                    </VBox.margin>
+                    <padding>
+                        <Insets left="8.0" right="8.0" top="8.0" />
+                    </padding>
+                </Label>
+                <Slider fx:id="numGroupsSlider" blockIncrement="1.0" majorTickUnit="1.0" max="10.0" min="1.0" minorTickCount="0" prefHeight="67.0" prefWidth="589.0" showTickLabels="true" showTickMarks="true" snapToTicks="true">
+                    <VBox.margin>
+                        <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+                    </VBox.margin>
+                    <padding>
+                        <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+                    </padding>
+                </Slider>
+                <Label layoutX="18.0" layoutY="18.0" text="People per Group">
+                    <padding>
+                        <Insets left="8.0" right="8.0" top="8.0" />
+                    </padding>
+                    <VBox.margin>
+                        <Insets left="8.0" right="8.0" top="8.0" />
+                    </VBox.margin>
+                </Label>
+                <Slider fx:id="peoplePerGroupSlider" blockIncrement="1.0" layoutX="18.0" layoutY="61.0" majorTickUnit="1.0" max="10.0" min="1.0" minorTickCount="0" prefHeight="67.0" prefWidth="589.0" showTickLabels="true" showTickMarks="true" snapToTicks="true">
+                    <padding>
+                        <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+                    </padding>
+                    <VBox.margin>
+                        <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+                    </VBox.margin>
+                </Slider>
+                <HBox>
+                    <ChoiceBox fx:id="iterationTypeSelector" prefWidth="150.0">
+                  <HBox.margin>
+                     <Insets right="8.0" />
+                  </HBox.margin></ChoiceBox>
+
+                    <Button fx:id="createGroupsButton" mnemonicParsing="false" onAction="#createGroups" text="Create Groups">
+                  <HBox.margin>
+                     <Insets left="8.0" />
+                  </HBox.margin></Button>
+               <VBox.margin>
+                  <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+               </VBox.margin>
+               <padding>
+                  <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+               </padding>
+                </HBox>
+                <VBox.margin>
+                    <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+                </VBox.margin>
+        </VBox>
+        <JFXListView fx:id="groupsList" layoutX="354.0" layoutY="18.0" prefHeight="280.0" prefWidth="420.0" />
+
+        <padding>
+            <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+        </padding>
+    </AnchorPane>
+</Tab>
+
+        </TabPane>
